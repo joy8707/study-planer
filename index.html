@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<title>今日讀書計畫</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--muted:#86868b;--blue:#0071e3;--line:#e5e5ea;--green:#248a3d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:620px;margin:auto;padding:24px 18px calc(40px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 24px}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+h1{font-size:32px;letter-spacing:-.04em;margin:7px 0 4px}
+.date{color:var(--muted);font-size:14px}
+.pill{border:0;background:#e8f2ff;color:var(--blue);font-size:13px;font-weight:650;padding:9px 12px;border-radius:999px}
+.card{background:var(--card);border-radius:22px;padding:20px;margin-bottom:14px;box-shadow:0 2px 12px #00000005}
+.progress-head{display:flex;justify-content:space-between;align-items:end;gap:12px}
+.progress-head h2{font-size:17px;margin:0 0 6px}
+.big{font-size:30px;font-weight:700;letter-spacing:-.04em}
+.small{font-size:13px;color:var(--muted)}
+.track{height:8px;background:#ededf0;border-radius:99px;overflow:hidden;margin:16px 0 10px}
+.fill{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .25s}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:25px 3px 12px}
+.section-title h2{font-size:20px;margin:0;letter-spacing:-.025em}
+.section-title span{font-size:13px;color:var(--muted)}
+.task{display:flex;align-items:flex-start;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0;padding-bottom:2px}
+.check{appearance:none;-webkit-appearance:none;width:23px;height:23px;flex:0 0 23px;border:1.7px solid #c7c7cc;border-radius:50%;margin:1px 0 0;display:grid;place-items:center}
+.check:checked{background:var(--blue);border-color:var(--blue)}
+.check:checked:after{content:"✓";font-size:14px;color:white;font-weight:700}
+.task-body{min-width:0;flex:1}
+.task-name{font-size:16px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.task-meta{font-size:13px;color:var(--muted);margin-top:5px}
+.done .task-name{text-decoration:line-through;color:var(--muted)}
+.delete{border:0;background:transparent;color:#b0b0b5;font-size:21px;padding:0 3px;line-height:1}
+.add-row{display:flex;gap:8px;margin-top:16px}
+input,select{font:inherit;min-width:0;border:1px solid var(--line);background:#fbfbfd;border-radius:12px;padding:12px;color:var(--text)}
+input{flex:1;width:100%}
+select{width:100px}
+.add-btn{border:0;border-radius:12px;background:var(--blue);color:#fff;font-weight:650;padding:0 16px}
+.hint{font-size:12px;color:var(--muted);line-height:1.5;margin:14px 3px 0}
+.footer{text-align:center;color:var(--muted);font-size:12px;padding:16px 8px}
+button{cursor:pointer}
+button:active{opacity:.75}
+@media(min-width:520px){main{padding-top:38px}.card{padding:24px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <div class="eyebrow">YOUR STUDY SPACE</div>
+      <h1>今日讀書計畫</h1>
+      <div class="date" id="today"></div>
+    </div>
+    <button class="pill" id="resetDay" type="button">重設勾選</button>
+  </div>
+
+  <section class="card" aria-label="今日進度">
+    <div class="progress-head">
+      <div><h2>今天的進度</h2><div class="small" id="progressText">開始完成第一個任務吧</div></div>
+      <div class="big" id="percent">0%</div>
+    </div>
+    <div class="track"><div class="fill" id="bar"></div></div>
+    <div class="small" id="count">0 / 0 項任務完成</div>
+  </section>
+
+  <div class="section-title"><h2>待辦任務</h2><span id="remaining">0 項待完成</span></div>
+  <section class="card" id="taskList" aria-label="任務清單"></section>
+
+  <section class="card">
+    <h2 style="font-size:18px;margin:0 0 5px">新增任務</h2>
+    <div class="small">把今天想完成的事，拆成小步驟。</div>
+    <form class="add-row" id="addForm">
+      <input id="taskInput" maxlength="100" placeholder="例如：完成生物細胞分裂" aria-label="新任務名稱" required>
+      <select id="subject" aria-label="科目">
+        <option>生物</option><option>數學</option><option>物理</option><option>英文</option><option>其他</option>
+      </select>
+      <button class="add-btn" type="submit">新增</button>
+    </form>
+    <p class="hint">你的任務會保存在這個瀏覽器的本機儲存空間。若清除網站資料或換裝置，資料可能不會保留。</p>
+  </section>
+  <div class="footer">一步一步來，完成比完美重要。</div>
+</main>
+<script>
+const STORAGE_KEY='study-planner-v1';
+const initialTasks=[
+ {id:'a1',name:'複習今天的課堂筆記',subject:'其他',done:false},
+ {id:'a2',name:'完成一回練習題',subject:'數學',done:false},
+ {id:'a3',name:'整理錯題與觀念',subject:'生物',done:false}
+];
+let tasks=[];
+try{const saved=localStorage.getItem(STORAGE_KEY);tasks=saved?JSON.parse(saved):initialTasks}catch(e){tasks=initialTasks}
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(tasks))}catch(e){}}
+function render(){
+ const list=$('taskList');list.innerHTML='';
+ if(!tasks.length){list.innerHTML='<div class="small" style="padding:8px 0">目前沒有任務，新增一項開始吧。</div>'}
+ tasks.forEach(t=>{
+  const row=document.createElement('div');row.className='task'+(t.done?' done':'');
+  const check=document.createElement('input');check.type='checkbox';check.className='check';check.checked=!!t.done;check.setAttribute('aria-label','完成 '+t.name);
+  check.addEventListener('change',()=>{t.done=check.checked;save();render()});
+  const body=document.createElement('div');body.className='task-body';
+  const name=document.createElement('div');name.className='task-name';name.textContent=t.name;
+  const meta=document.createElement('div');meta.className='task-meta';meta.textContent=t.subject||'其他';
+  body.append(name,meta);
+  const del=document.createElement('button');del.className='delete';del.type='button';del.textContent='×';del.setAttribute('aria-label','刪除 '+t.name);
+  del.addEventListener('click',()=>{tasks=tasks.filter(x=>x.id!==t.id);save();render()});
+  row.append(check,body,del);list.append(row);
+ });
+ const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+ $('percent').textContent=pct+'%';$('bar').style.width=pct+'%';$('count').textContent=`${done} / ${total} 項任務完成`;
+ $('remaining').textContent=`${total-done} 項待完成`;
+ $('progressText').textContent=pct===100&&total?'太棒了！今天的任務全部完成。':done?'繼續保持，你正在前進。':'開始完成第一個任務吧';
+}
+$('today').textContent=new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date());
+$('addForm').addEventListener('submit',e=>{e.preventDefault();const name=$('taskInput').value.trim();if(!name)return;tasks.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name,subject:$('subject').value,done:false});save();$('taskInput').value='';render();});
+$('resetDay').addEventListener('click',()=>{if(confirm('要取消所有任務的完成勾選嗎？')){tasks=tasks.map(t=>({...t,done:false}));save();render()}});
+render();
+</script>
+</body>
+</html>
